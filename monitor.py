@@ -56,9 +56,20 @@ class MonitorBinanceFutures:
         print(f"\n🛑 Recebido sinal {signum}. Encerrando...")
         self.running = False
 
+    # Monitor com melhorias para Binance Futures
     def buscar_dados(self, moeda: str) -> Optional[pd.DataFrame]:
-        """Busca dados de futuros da Binance com retry"""
+        """Busca dados de futuros da Binance com headers otimizados"""
         max_retries = 3
+        
+        # Headers para parecer com browser normal
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'application/json',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+        }
         
         for tentativa in range(max_retries):
             try:
@@ -72,8 +83,16 @@ class MonitorBinanceFutures:
                 response = requests.get(
                     url, 
                     params=params, 
+                    headers=headers,  # Adiciona headers
                     timeout=REQUEST_CONFIG['timeout']
                 )
+                
+                # Se deu 451, aguarda mais tempo
+                if response.status_code == 451:
+                    wait_time = (tentativa + 1) * 5  # 5s, 10s, 15s
+                    time.sleep(wait_time)
+                    continue
+                    
                 response.raise_for_status()
                 
                 df = pd.DataFrame(response.json(), columns=[
@@ -88,12 +107,13 @@ class MonitorBinanceFutures:
                 return df
                 
             except Exception as e:
+                wait_time = (tentativa + 1) * 2  # Aumenta tempo de espera
                 logging.warning(f"Tentativa {tentativa + 1}/{max_retries} falhou para {moeda}: {str(e)}")
                 if tentativa == max_retries - 1:
                     logging.error(f"Erro final ao buscar {moeda}: {str(e)}")
                 else:
-                    time.sleep(1)
-                    
+                    time.sleep(wait_time)
+                        
         return None
 
     def calcular_medias(self, df: pd.DataFrame) -> pd.DataFrame:

@@ -38,7 +38,7 @@ MOEDAS: List[str] = [
 TIMEFRAME: str = '4h'  # 1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d
 
 # Intervalo entre verificações (segundos)
-INTERVALO_VERIFICACAO: int = 60  # 5 minutos
+INTERVALO_VERIFICACAO: int = 300  # 5 minutos
 
 # Força mínima do cruzamento - MA principal deve estar X% acima/abaixo das MAs de referência
 FORCA_MINIMA_CRUZAMENTO: float = 0.02  # 2% - força mínima para validar o cruzamento
@@ -103,7 +103,7 @@ BINANCE_API: Dict[str, str] = {
 
 # Configurações da requisição
 REQUEST_CONFIG: Dict[str, Any] = {
-    'timeout': 10,  # ← Tempo limite para requisição (10 segundos)
+    'timeout': 30,  # ← Tempo limite para requisição (10 segundos)
     'limit_candles': 100
 }
 
