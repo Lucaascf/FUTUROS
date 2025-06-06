@@ -1,0 +1,35 @@
+# Arquivo .gitignore - NÃO suba esses arquivos no Git
+
+# Credenciais sensíveis
+.env
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Ambientes virtuais
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+aaaaaa.py
+script.py
+teste.py
+
