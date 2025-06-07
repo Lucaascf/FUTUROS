@@ -1,4 +1,4 @@
-# config.py - Todas as configurações centralizadas
+# config.py - Versão com debug ativado para investigar problemas
 import os
 from typing import List, Dict, Any, Tuple
 
@@ -12,6 +12,7 @@ def carregar_env():
                 if linha and not linha.startswith('#') and '=' in linha:
                     chave, valor = linha.split('=', 1)
                     os.environ[chave.strip()] = valor.strip()
+        print("✅ Arquivo .env carregado")
     except FileNotFoundError:
         print("⚠️  Arquivo .env não encontrado. Usando configurações padrão.")
 
@@ -27,6 +28,13 @@ TELEGRAM_CONFIG = {
     'chat_id': os.getenv('CHAT_ID', 'SEU_CHAT_ID_AQUI'),
     'ativado': True
 }
+
+# Debug das configurações do Telegram
+if TELEGRAM_CONFIG['bot_token'] != 'SEU_BOT_TOKEN_AQUI':
+    print(f"🤖 Telegram configurado: Bot token: {TELEGRAM_CONFIG['bot_token'][:10]}...")
+    print(f"📱 Chat ID: {TELEGRAM_CONFIG['chat_id']}")
+else:
+    print("⚠️ Telegram NÃO configurado - defina BOT_TOKEN no .env")
 
 # Moedas para monitorar
 MOEDAS: List[str] = [
@@ -47,7 +55,6 @@ FORCA_MINIMA_CRUZAMENTO: float = 0.02  # 2% - força mínima para validar o cruz
 # BANCO DE MÉDIAS MÓVEIS DISPONÍVEIS
 # =============================================================================
 
-# Todas as MAs disponíveis para uso
 MAS_DISPONIVEIS: Dict[str, int] = {
     'MA_5': 5, 'MA_7': 7, 'MA_9': 9, 'MA_12': 12, 'MA_20': 20,
     'MA_25': 25, 'MA_30': 30, 'MA_50': 50, 'MA_99': 99, 
@@ -68,6 +75,8 @@ ESTRATEGIA_ATUAL = {
     'descricao': 'MA7 cruzando MA25 e MA99'
 }
 
+print(f"🎯 Estratégia configurada: {ESTRATEGIA_ATUAL['descricao']}")
+
 # =============================================================================
 # PROCESSAMENTO AUTOMÁTICO DA ESTRATÉGIA
 # =============================================================================
@@ -80,11 +89,18 @@ def get_mas_necessarias() -> Dict[str, int]:
     ma_principal = ESTRATEGIA_ATUAL['ma_principal']
     if ma_principal in MAS_DISPONIVEIS:
         mas_necessarias[ma_principal] = MAS_DISPONIVEIS[ma_principal]
+        print(f"📊 MA Principal: {ma_principal}({MAS_DISPONIVEIS[ma_principal]})")
+    else:
+        print(f"❌ ERRO: MA principal '{ma_principal}' não encontrada!")
     
     # Adiciona as MAs de referência
+    print("📊 MAs de Referência:")
     for ma_ref in ESTRATEGIA_ATUAL['mas_referencia']:
         if ma_ref in MAS_DISPONIVEIS:
             mas_necessarias[ma_ref] = MAS_DISPONIVEIS[ma_ref]
+            print(f"   • {ma_ref}({MAS_DISPONIVEIS[ma_ref]})")
+        else:
+            print(f"❌ ERRO: MA de referência '{ma_ref}' não encontrada!")
     
     return mas_necessarias
 
@@ -101,11 +117,16 @@ BINANCE_API: Dict[str, str] = {
     'klines_endpoint': '/fapi/v1/klines'
 }
 
+print(f"🌐 API Base URL: {BINANCE_API['base_url']}")
+
 # Configurações da requisição
 REQUEST_CONFIG: Dict[str, Any] = {
-    'timeout': 30,  # ← Tempo limite para requisição (10 segundos)
-    'limit_candles': 100
+    'timeout': 30,  # Tempo limite para requisição
+    'limit_candles': 100  # Número de candles para buscar
 }
+
+print(f"⏱️ Timeout: {REQUEST_CONFIG['timeout']}s")
+print(f"📊 Candles por request: {REQUEST_CONFIG['limit_candles']}")
 
 # =============================================================================
 # CONFIGURAÇÕES DE DISPLAY
@@ -130,14 +151,17 @@ SIMBOLOS: Dict[str, str] = {
 }
 
 # =============================================================================
-# LOGGING
+# LOGGING COM DEBUG ATIVADO
 # =============================================================================
 
+# Configuração de logging com DEBUG para investigar problemas
 LOGGING_CONFIG: Dict[str, Any] = {
-    'level': 'INFO',
-    'format': '%(asctime)s - %(message)s',
+    'level': 'DEBUG',  # ← Mudado para DEBUG para ver todos os detalhes
+    'format': '%(asctime)s - %(levelname)s - %(message)s',
     'datefmt': '%H:%M:%S'
 }
+
+print(f"🔍 Log Level: {LOGGING_CONFIG['level']} (modo debug ativado)")
 
 # =============================================================================
 # FUNÇÕES AUXILIARES DE CONFIGURAÇÃO
@@ -153,7 +177,7 @@ def get_ma_periods() -> List[int]:
 
 def get_estrategia_info() -> Dict[str, Any]:
     """Retorna informações da estratégia atual"""
-    return {
+    info = {
         'nome': ESTRATEGIA_ATUAL['nome'],
         'ma_principal': ESTRATEGIA_ATUAL['ma_principal'],
         'mas_referencia': ESTRATEGIA_ATUAL['mas_referencia'],
@@ -161,6 +185,8 @@ def get_estrategia_info() -> Dict[str, Any]:
         'periodo_principal': MAS_DISPONIVEIS.get(ESTRATEGIA_ATUAL['ma_principal'], 0),
         'periodos_referencia': [MAS_DISPONIVEIS.get(ma, 0) for ma in ESTRATEGIA_ATUAL['mas_referencia']]
     }
+    print(f"📋 Estratégia: {info['descricao']}")
+    return info
 
 def criar_nova_estrategia(nome: str, ma_principal: str, mas_referencia: List[str], descricao: str = "") -> Dict[str, Any]:
     """
@@ -202,11 +228,12 @@ def update_moedas(novas_moedas: List[str]) -> None:
     """Atualiza a lista de moedas"""
     global MOEDAS
     MOEDAS = novas_moedas
+    print(f"💰 Moedas atualizadas: {len(MOEDAS)} - {', '.join(MOEDAS)}")
 
 def get_config_summary() -> Dict[str, Any]:
     """Retorna um resumo das configurações atuais"""
     estrategia = get_estrategia_info()
-    return {
+    summary = {
         'moedas': len(MOEDAS),
         'timeframe': TIMEFRAME,
         'intervalo': INTERVALO_VERIFICACAO,
@@ -215,49 +242,88 @@ def get_config_summary() -> Dict[str, Any]:
         'ma_principal': f"{estrategia['ma_principal']}({estrategia['periodo_principal']})",
         'mas_referencia': [f"{ma}({periodo})" for ma, periodo in zip(estrategia['mas_referencia'], estrategia['periodos_referencia'])],
         'medias_moveis': PERIODOS_MA,
-        'mas_disponiveis': len(MAS_DISPONIVEIS)
+        'mas_disponiveis': len(MAS_DISPONIVEIS),
+        'log_level': LOGGING_CONFIG['level'],
+        'telegram_ativo': TELEGRAM_CONFIG['bot_token'] != 'SEU_BOT_TOKEN_AQUI'
     }
+    
+    # Debug do resumo
+    print("📋 RESUMO DA CONFIGURAÇÃO:")
+    print(f"   • Moedas: {summary['moedas']}")
+    print(f"   • Timeframe: {summary['timeframe']}")
+    print(f"   • Intervalo: {summary['intervalo']}s")
+    print(f"   • Força mínima: {summary['limite_distancia']}")
+    print(f"   • Estratégia: {summary['estrategia']}")
+    print(f"   • Log Level: {summary['log_level']}")
+    print(f"   • Telegram: {'✅' if summary['telegram_ativo'] else '❌'}")
+    
+    return summary
 
 # =============================================================================
-# VALIDAÇÃO AUTOMÁTICA
+# VALIDAÇÃO AUTOMÁTICA COM DEBUG
 # =============================================================================
 
 def validar_configuracao() -> Tuple[bool, str]:
     """Valida se a configuração atual é válida"""
+    print("🔍 Validando configuração...")
+    
     ma_principal = ESTRATEGIA_ATUAL['ma_principal']
     mas_referencia = ESTRATEGIA_ATUAL['mas_referencia']
     
     # Verifica se MA principal existe
     if ma_principal not in MAS_DISPONIVEIS:
-        return False, f"MA principal '{ma_principal}' não encontrada em MAS_DISPONIVEIS"
+        erro = f"MA principal '{ma_principal}' não encontrada em MAS_DISPONIVEIS"
+        print(f"❌ {erro}")
+        return False, erro
     
     # Verifica se todas as MAs de referência existem
     for ma_ref in mas_referencia:
         if ma_ref not in MAS_DISPONIVEIS:
-            return False, f"MA de referência '{ma_ref}' não encontrada em MAS_DISPONIVEIS"
+            erro = f"MA de referência '{ma_ref}' não encontrada em MAS_DISPONIVEIS"
+            print(f"❌ {erro}")
+            return False, erro
     
     # Verifica se há pelo menos uma MA de referência
     if not mas_referencia:
-        return False, "É necessário pelo menos uma MA de referência"
+        erro = "É necessário pelo menos uma MA de referência"
+        print(f"❌ {erro}")
+        return False, erro
     
     # Verifica se as MAs têm períodos diferentes
     periodo_principal = MAS_DISPONIVEIS[ma_principal]
     for ma_ref in mas_referencia:
         if MAS_DISPONIVEIS[ma_ref] == periodo_principal:
-            return False, f"MA principal e MA de referência '{ma_ref}' têm o mesmo período ({periodo_principal})"
+            erro = f"MA principal e MA de referência '{ma_ref}' têm o mesmo período ({periodo_principal})"
+            print(f"❌ {erro}")
+            return False, erro
     
+    print("✅ Configuração validada com sucesso!")
     return True, "Configuração válida"
 
-# Validação automática na importação
+# Validação automática na importação com debug
+print("🚀 Inicializando configurações...")
 _is_valid, _error_msg = validar_configuracao()
+
 if not _is_valid:
-    print(f"⚠️  ERRO DE CONFIGURAÇÃO: {_error_msg}")
-    print("Por favor, corrija a configuração em ESTRATEGIA_ATUAL")
+    print(f"💀 ERRO CRÍTICO DE CONFIGURAÇÃO: {_error_msg}")
+    print("🔧 Por favor, corrija a configuração em ESTRATEGIA_ATUAL")
+    print("📋 MAs disponíveis:", list(MAS_DISPONIVEIS.keys()))
 else:
     print(f"✅ Configuração válida: {ESTRATEGIA_ATUAL['descricao']}")
 
-# Verifica se credenciais do Telegram estão configuradas
+# Verifica credenciais do Telegram com debug
+print("🤖 Verificando configuração do Telegram...")
 if TELEGRAM_CONFIG['bot_token'] == 'SEU_BOT_TOKEN_AQUI':
-    print("⚠️  Configure o BOT_TOKEN no arquivo .env")
+    print("⚠️  BOT_TOKEN não configurado - defina no arquivo .env")
+else:
+    print(f"✅ BOT_TOKEN configurado: {TELEGRAM_CONFIG['bot_token'][:10]}...")
+
 if TELEGRAM_CONFIG['chat_id'] == 'SEU_CHAT_ID_AQUI':
-    print("⚠️  Configure o CHAT_ID no arquivo .env")
+    print("⚠️  CHAT_ID não configurado - defina no arquivo .env")
+else:
+    print(f"✅ CHAT_ID configurado: {TELEGRAM_CONFIG['chat_id']}")
+
+# Debug final das MAs que serão usadas
+print(f"📊 MAs que serão calculadas: {dict(PERIODOS_MA)}")
+print(f"📈 Máximo período necessário: {max(PERIODOS_MA.values()) if PERIODOS_MA else 0}")
+print("🎯 Configuração concluída!\n")
