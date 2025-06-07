@@ -7,6 +7,7 @@ from monitor import MonitorBinanceFutures
 from config import get_config_summary
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
+from datetime import datetime
 
 class HealthHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -94,7 +95,7 @@ def start_web_server():
     
     # Bind em todas as interfaces
     server = HTTPServer(('0.0.0.0', port), HealthHandler)
-    print(f"🌐 Servidor web iniciado na porta {port}")
+    print(f"🌐 Servidor web ativo na porta {port}")
     
     try:
         server.serve_forever()
@@ -103,7 +104,12 @@ def start_web_server():
 
 def main():
     """Função principal"""
-    print("🚀 Iniciando aplicação no Fly.io...")
+    port = int(os.getenv('PORT', 8080))
+    print(f"\n{'='*60}")
+    print(f"🌐 INICIANDO APLICAÇÃO NO FLY.IO")
+    print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🖥️ PORT: {port}")
+    print(f"{'='*60}\n")
     
     # Inicia servidor web em thread separada
     web_thread = threading.Thread(target=start_web_server, daemon=True)
@@ -125,8 +131,9 @@ def main():
             break
             
         except Exception as e:
-            print(f"❌ Erro no monitor: {e}")
-            print("📝 Detalhes do erro:")
+            print(f"\n❌ ERRO NO MONITOR")
+            print(f"   🔍 Detalhes: {e}")
+            print(f"   📝 Traceback:")
             traceback.print_exc()
             
             print("🔄 Reiniciando monitor em 60 segundos...")
