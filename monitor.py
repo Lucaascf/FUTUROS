@@ -21,8 +21,8 @@ from config import (
 # Configuração do logging otimizada para Railway
 logging.basicConfig(
     level=getattr(logging, LOGGING_CONFIG['level']),
-    format='%(asctime)s | %(levelname)-8s | %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
+    format=LOGGING_CONFIG['format'],
+    datefmt=LOGGING_CONFIG['datefmt'],
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 
@@ -38,12 +38,7 @@ class MonitorBinanceFutures:
         self.ma_principal = self.estrategia['ma_principal']
         self.mas_referencia = self.estrategia['mas_referencia']
         
-        print(f"\n{'='*60}")
-        print(f"🚀 INICIANDO MONITOR BINANCE FUTURES")
-        print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"🎯 Estratégia: {self.estrategia['descricao']}")
-        print(f"📊 MAs: {dict(PERIODOS_MA)}")
-        print(f"{'='*60}\n")
+        print(f"🎯 Estratégia carregada: {self.estrategia['descricao']}")
 
         self.telegram = None
         if TELEGRAM_CONFIG['ativado'] and TELEGRAM_CONFIG['bot_token'] != 'SEU_BOT_TOKEN_AQUI':
@@ -236,23 +231,23 @@ class MonitorBinanceFutures:
         return None
 
     def mostrar_alertas(self, resultados: List[Dict[str, Any]]) -> None:
-        """Exibe alertas formatados com logging melhorado"""
+        """Exibe alertas formatados - otimizado para Railway"""
         timestamp = datetime.now().strftime('%H:%M:%S')
         
         alertas_encontrados = [r for r in resultados if r is not None]
         
         if alertas_encontrados:
-            print(f"\n{'🚨'*20}")
-            print(f"🚨 ALERTAS ENCONTRADOS - {timestamp}")
-            print(f"{'🚨'*20}")
+            print(f"\n{'='*60}")
+            print(f"🚨 ALERTAS DETECTADOS | {timestamp}")
+            print(f"📈 Estratégia: {self.estrategia['descricao']}")
+            print("="*60)
             
             for r in alertas_encontrados:
                 tipo = "ALTA" if r['cruzamento_alta'] else "BAIXA"
-                emoji = "🟢" if r['cruzamento_alta'] else "🔴"
+                emoji = SIMBOLOS['alta'] if r['cruzamento_alta'] else SIMBOLOS['baixa']
                 
-                print(f"\n{emoji} {tipo}: {r['moeda']}")
-                print(f"   💰 Preço: ${r['preco']:.{FORMATO_PRECO['decimais']}f}")
-                print(f"   🕒 Horário: {r['timestamp']}")
+                print(f"\n{emoji} {tipo}: {r['moeda']} | Preço: ${r['preco']:.{FORMATO_PRECO['decimais']}f}")
+                print(f"   Horário: {r['timestamp']}")
                 
                 # MAs info
                 mas_info = []
@@ -260,11 +255,14 @@ class MonitorBinanceFutures:
                 for nome, periodo in mas_ordenadas:
                     valor = r[nome.lower()]
                     mas_info.append(f"{nome}: {valor:.{FORMATO_PRECO['decimais']}f}")
-                print(f"   📊 {' | '.join(mas_info)}")
+                print(f"   {' | '.join(mas_info)}")
         else:
-            print(f"\n🔄 Verificação concluída | {timestamp}")
-            if self.alertas_ativos:
-                print(f"   ⚠️ Alertas ativos: {len(self.alertas_ativos)}")
+            # Log mais limpo para Railway
+            ativos = len(self.alertas_ativos)
+            status = f"✅ Monitorando... | {timestamp}"
+            if ativos > 0:
+                status += f" | Alertas ativos: {ativos}"
+            print(status)
 
     def executar_verificacao(self) -> None:
         """Executa verificação paralela com timeout"""
@@ -289,14 +287,17 @@ class MonitorBinanceFutures:
 
     def iniciar_monitoramento(self) -> None:
         """Inicia o loop de monitoramento - versão Railway"""
-        print(f"\n{'='*60}")
-        print(f"🔍 CONFIGURAÇÃO INICIAL")
+        print("\033[1m" + "="*60)
+        print(f"🚀 MONITOR ONLINE - FUTUROS BINANCE")
+        print("="*60 + "\033[0m")
         print(f"📈 Moedas: {', '.join(MOEDAS)}")
-        print(f"⏱️ Timeframe: {TIMEFRAME} | Intervalo: {INTERVALO_VERIFICACAO}s")
+        print(f"⏱️  Timeframe: {TIMEFRAME}")
+        print(f"🔄 Intervalo: {INTERVALO_VERIFICACAO} segundos")
         print(f"📏 Força mínima: {FORCA_MINIMA_CRUZAMENTO*100:.1f}%")
+        print(f"🎯 Estratégia: {self.estrategia['descricao']}")
+        print(f"📊 MAs: {dict(PERIODOS_MA)}")
         print(f"🤖 Telegram: {'✅ Ativo' if self.telegram else '❌ Inativo'}")
-        print(f"{'='*60}")
-        print(f"🌐 Monitor rodando na nuvem...\n")
+        print("\n🌐 Monitor rodando na nuvem...\n")
         
         tentativas_erro = 0
         max_tentativas = 5
@@ -315,7 +316,7 @@ class MonitorBinanceFutures:
                     
                     # Sleep simples para Railway (sem contagem regressiva)
                     if tempo_espera > 0 and self.running:
-                        print(f"⏳ Próxima verificação em {tempo_espera:.0f}s...")
+                        print(f"⏳ Aguardando {tempo_espera:.0f}s para próxima verificação...")
                         time.sleep(tempo_espera)
                     
                 except Exception as e:
