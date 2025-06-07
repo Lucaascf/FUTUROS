@@ -22,8 +22,15 @@ class HealthHandler(BaseHTTPRequestHandler):
             
             self.wfile.write(json.dumps(response, indent=2).encode())
         else:
-            self.send_response(404)
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
             self.end_headers()
+            html = """
+            <h1>🚀 Monitor Crypto Online!</h1>
+            <p>✅ Sistema funcionando</p>
+            <p>📊 <a href="/health">Ver status detalhado</a></p>
+            """
+            self.wfile.write(html.encode())
 
 def start_web_server():
     """Inicia servidor web para manter a aplicação viva"""
