@@ -1,4 +1,4 @@
-app = "futuros"
+app = "futuros-lucas"
 
 [build]
 
@@ -27,7 +27,8 @@ app = "futuros"
   auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
-
+  max_machines_running = 1
+  
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
