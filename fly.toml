@@ -9,15 +9,9 @@ app = "futuros-lucas"
   auto_stop_machines = false
   auto_start_machines = true
 
-# Força apenas 1 máquina para evitar duplicatas
-[deploy]
-  strategy = "immediate"
-
 [[services]]
   internal_port = 8080
   protocol = "tcp"
-  min_machines_running = 1
-  max_machines_running = 1
 
   [[services.ports]]
     port = 80
@@ -38,4 +32,4 @@ app = "futuros-lucas"
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
-  memory_mb = 512
+  memory_mb = 256
